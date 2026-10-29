@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "photos": {
+      "type": "http",
+      "url": "http://192.168.1.2:30060/mcp",
+      "headers": { "Authorization": "Bearer <token of the photos MCP server>" }
+    },
+    "logs": {
+      "type": "http",
+      "url": "http://192.168.1.2:30623/mcp",
+      "headers": { "Authorization": "Bearer <identifier declared in ECS_LOGGER_DESTINATIONS>" }
+    }
+  }
+}

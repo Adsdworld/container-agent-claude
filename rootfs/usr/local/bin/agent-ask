@@ -1,0 +1,26 @@
+#!/bin/bash
+# Usage: agent-ask QUESTION
+# Wakes the agent with a question from a script, and returns at once: the
+# script ends, the agent decides what comes next.
+set -uo pipefail
+
+LOG=/agent/data/logs/agent.log
+from="${AGENT_SCRIPT:-unknown}"
+# The scripts that asked, one after the other, since a run that nobody asked.
+chain="${AGENT_ASK_CHAIN:+$AGENT_ASK_CHAIN > }$from"
+links="${chain//[^>]/}"
+depth=$((${#links} + 1))
+max_depth="${AGENT_ASK_MAX_DEPTH:-256}"
+
+if [ $# -ne 1 ] || [ -z "$1" ]; then
+    echo "usage: agent-ask QUESTION" >&2
+    exit 2
+fi
+if [ "$depth" -gt "$max_depth" ]; then
+    echo "$(date -Is) ask refused, chain $chain is longer than $max_depth" >> "$LOG"
+    echo "agent-ask: refused, chain deeper than $max_depth" >&2
+    exit 1
+fi
+
+AGENT_ASK_CHAIN="$chain" setsid /usr/local/bin/agent-run --ask "$from" "$1" < /dev/null > /dev/null 2>&1 &
+echo "agent-ask: the agent will answer in its own run"

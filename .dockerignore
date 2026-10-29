@@ -1,0 +1,7 @@
+.git/
+.github/
+examples/
+smoke/
+*.md
+Dockerfile
+.dockerignore

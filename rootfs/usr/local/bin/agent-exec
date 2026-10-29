@@ -1,0 +1,24 @@
+#!/bin/bash
+set -uo pipefail
+
+source /run/agent.env
+if [ -r /agent/config/environment ]; then
+    set -a
+    source /agent/config/environment
+    set +a
+fi
+cd /agent/data || exit 1
+
+# Keeps the script's output in logs/scripts/<name>.log, and still prints it.
+name="$(basename "$1")"
+for argument in "$@"; do
+    if [ -f "$argument" ]; then
+        name="$(basename "$argument")"
+        break
+    fi
+done
+export AGENT_SCRIPT="$name"
+mkdir -p /agent/data/logs/scripts
+exec > >(tee -a "/agent/data/logs/scripts/$name.log") 2>&1
+echo "--- $(date -Is) $*"
+exec "$@"

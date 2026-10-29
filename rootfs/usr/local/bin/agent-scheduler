@@ -1,0 +1,30 @@
+#!/bin/bash
+set -uo pipefail
+
+LOG=/agent/data/logs/agent.log
+INBOX=/agent/data/inbox
+STARTED=/run/agent-run-started
+interval="${AGENT_INTERVAL:-86400}"
+
+if ! [[ "$interval" =~ ^[0-9]+$ ]] || [ "$interval" -eq 0 ]; then
+    echo "$(date -Is) warning: AGENT_INTERVAL=$interval is not a positive number of seconds, using 86400" >> "$LOG"
+    interval=86400
+fi
+
+while true; do
+    start=$(date +%s)
+    /usr/local/bin/agent-run
+    next=$((start + interval))
+    now=$(date +%s)
+    if [ "$next" -gt "$now" ]; then
+        echo "$(date -Is) next run at $(date -Is -d "@$next")" >> "$LOG"
+    fi
+    # A message left in the inbox since the last run starts the next one now.
+    while [ "$(date +%s)" -lt "$next" ]; do
+        if [ -n "$(find "$INBOX" -maxdepth 1 -type f ! -name '.*' -cnewer "$STARTED" 2>/dev/null)" ]; then
+            echo "$(date -Is) new message in the inbox, run now" >> "$LOG"
+            break
+        fi
+        sleep 60
+    done
+done

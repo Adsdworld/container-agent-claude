@@ -1,0 +1,13 @@
+services:
+  agent:
+    image: ghcr.io/adsdworld/container-agent-claude:latest
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      TZ: Europe/Paris
+      CLAUDE_CODE_OAUTH_TOKEN: "<token from `claude setup-token`>"
+      AGENT_MODEL: sonnet
+      AGENT_INTERVAL: "86400"
+    volumes:
+      - /mnt/docker/agents/jarvis/config:/agent/config:ro
+      - /mnt/docker/agents/jarvis/data:/agent/data
